@@ -53,7 +53,7 @@ function titleOf(item, type) {
 
 function poster(item, type, eager = false) {
   const box = el("div", "poster");
-  const source = imageUrl(item.poster_path, "w342");
+  const source = imageUrl(item.poster_path, eager ? "w342" : "w185");
   if (!source) {
     box.append(el("span", "placeholder", "Cartaz indisponível"));
     return box;
@@ -62,8 +62,8 @@ function poster(item, type, eager = false) {
 const img = document.createElement("img");
   img.src = source;
   img.alt = `Cartaz de ${titleOf(item, type)}`;
-  img.width = 342;
-  img.height = 513;
+  img.width = eager ? 342 : 185;
+  img.height = eager ? 513 : 278;
   img.loading = eager ? "eager" : "lazy";
   img.decoding = "async";
   img.addEventListener("error", () => {
@@ -135,7 +135,7 @@ return {
       } else {
         track.append(...items
           .filter(item => item && Number.isSafeInteger(item.id) && item.id > 0)
-          .map(item => card(item, type)));
+          .map((item, index) => card(item, type, index === 0)));
         if (!track.children.length) {
           track.append(message("Não há resultados disponíveis."));
         }

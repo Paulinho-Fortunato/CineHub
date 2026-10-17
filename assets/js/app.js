@@ -1,6 +1,6 @@
 import {
   popularMovies, popularTV, nowPlaying, searchMulti,
-  details, credits, recommendations, seasonDetails
+  details, seasonDetails
 } from "./api.js";
 import { parseRoute, navigate, searchHref } from "./router.js";
 import {
@@ -190,7 +190,9 @@ async function loadContent(route, version, signal) {
   setPage(root);
 
 try {
-    const data = await details(route.type, route.id, signal);
+    const data = await details(route.type, route.id, signal, {
+      includeExtras: route.name === "details"
+    });
     if (!isCurrent(version)) return;
 
     if (route.name === "watch") {
@@ -222,26 +224,11 @@ try {
 const view = detailView(data, route.type, goBack);
     setPage(view.node);
 
-// As secções adicionais não impedem que os detalhes sejam apresentados.
-    credits(route.type, route.id, signal).then(result => {
-      if (isCurrent(version)) view.cast(
-        Array.isArray(result.cast) ? result.cast : []
-      );
-    }).catch(error => {
-      if (error.name !== "AbortError" && isCurrent(version)) {
-        view.castError(`Não foi possível carregar o elenco. ${errorText(error)}`);
-      }
-    });
-
-recommendations(route.type, route.id, signal).then(result => {
-      if (isCurrent(version)) view.recommendations(result.results);
-    }).catch(error => {
-      if (error.name !== "AbortError" && isCurrent(version)) {
-        view.recommendationsError(
-          `Não foi possível carregar recomendações. ${errorText(error)}`
-        );
-      }
-    });
+    // credits e recommendations vêm agregados no mesmo pedido de detalhes.
+    if (isCurrent(version)) {
+      view.cast(Array.isArray(data.credits?.cast) ? data.credits.cast : []);
+      view.recommendations(data.recommendations?.results);
+    }
   } catch (error) {
     if (error.name === "AbortError" || !isCurrent(version)) return;
     clear(root);

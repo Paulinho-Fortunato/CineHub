@@ -1,4 +1,4 @@
-const VERSION = "cinehub-v2";
+const VERSION = "cinehub-v3";
 const SHELL = `${VERSION}-shell`;
 const DATA = `${VERSION}-data`;
 const IMAGES = `${VERSION}-images`;

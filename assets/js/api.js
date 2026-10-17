@@ -132,8 +132,11 @@ export function searchMulti(query, page, signal) {
   );
 }
 
-export function details(type, id, signal) {
-  return request(`/${validType(type)}/${validId(id)}`, {}, signal);
+export function details(type, id, signal, { includeExtras = false } = {}) {
+  const params = includeExtras
+    ? { append_to_response: "credits,recommendations" }
+    : {};
+  return request(`/${validType(type)}/${validId(id)}`, params, signal);
 }
 
 export function credits(type, id, signal) {
