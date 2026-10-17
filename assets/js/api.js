@@ -99,7 +99,7 @@ export function imageUrl(path, size = "w500") {
   if (typeof path !== "string" || !/^\/[A-Za-z0-9_.-]+$/.test(path)) {
     return null;
   }
-  if (!["w185", "w342", "w500", "w780"].includes(size)) return null;
+  if (!["w92", "w185", "w342", "w500", "w780"].includes(size)) return null;
   return `${IMAGE_BASE}${size}${path}`;
 }
 
@@ -146,4 +146,12 @@ export function recommendations(type, id, signal) {
     { page: "1" },
     signal
   );
+}
+
+export function seasonDetails(id, seasonNumber, signal) {
+  const safeId = validId(id);
+  if (!Number.isSafeInteger(seasonNumber) || seasonNumber < 0) {
+    throw new ApiError("Temporada inválida.");
+  }
+  return request(`/tv/${safeId}/season/${seasonNumber}`, {}, signal);
 }

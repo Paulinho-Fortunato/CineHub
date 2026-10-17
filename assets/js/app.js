@@ -1,6 +1,6 @@
 import {
   popularMovies, popularTV, nowPlaying, searchMulti,
-  details, credits, recommendations
+  details, credits, recommendations, seasonDetails
 } from "./api.js";
 import { parseRoute, navigate, searchHref } from "./router.js";
 import {
@@ -193,8 +193,29 @@ try {
     const data = await details(route.type, route.id, signal);
     if (!isCurrent(version)) return;
 
-if (route.name === "watch") {
-      setPage(watchView(data, route.type, goBack));
+    if (route.name === "watch") {
+      const view = watchView(data, route.type, goBack);
+      setPage(view.node);
+      if (route.type === "tv") {
+        view.changeSeason = season => {
+          view.loadSeason([]);
+          seasonDetails(route.id, season, signal).then(result => {
+            if (isCurrent(version)) view.loadSeason(result.episodes);
+          }).catch(error => {
+            if (error.name !== "AbortError" && isCurrent(version)) view.loadSeason([]);
+          });
+        };
+        const season = data.seasons?.find(item => item.season_number > 0)?.season_number;
+        if (Number.isInteger(season)) {
+          seasonDetails(route.id, season, signal).then(result => {
+            if (isCurrent(version)) view.loadSeason(result.episodes);
+          }).catch(error => {
+            if (error.name !== "AbortError" && isCurrent(version)) {
+              view.loadSeason([]);
+            }
+          });
+        }
+      }
       return;
     }
 

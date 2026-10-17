@@ -13,6 +13,25 @@ export function clear(node) {
   node.replaceChildren();
 }
 
+const ICONS = {
+  arrowLeft: '<path d="m15 18-6-6 6-6"/><path d="M9 12h10"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
+  play: '<path d="m8 5 11 7-11 7z"/>',
+  external: '<path d="M14 5h5v5"/><path d="m19 5-8 8"/><path d="M19 13v5H6V6h5"/>',
+  chevronDown: '<path d="m6 9 6 6 6-6"/>',
+  film: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M17 9h4M3 15h4M17 15h4"/>'
+};
+
+export function icon(name, label = "") {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", label ? "false" : "true");
+  svg.setAttribute("focusable", "false");
+  if (label) svg.setAttribute("aria-label", label);
+  svg.innerHTML = ICONS[name] || ICONS.film;
+  return svg;
+}
+
 export function message(text, className = "status") {
   const node = el("p", className, text);
   node.setAttribute("role", className === "error" ? "alert" : "status");
@@ -134,7 +153,9 @@ export function formatDate(value) {
 }
 
 export function backButton(fallback, back) {
-  return button("Voltar", () => back(fallback), "button secondary back-button");
+  const node = button("Voltar", () => back(fallback), "button secondary back-button");
+  node.prepend(icon("arrowLeft"));
+  return node;
 }
 
 export function detailView(data, type, back) {
@@ -227,8 +248,23 @@ return {
       }
       const list = el("ul", "cast-list");
       for (const person of people.slice(0, 12)) {
-        const li = el("li", "", person.name || "Nome indisponível");
-        if (person.character) li.append(el("span", "muted", ` — ${person.character}`));
+        const li = el("li", "cast-card");
+        const photo = imageUrl(person.profile_path, "w185");
+        if (photo) {
+          const img = document.createElement("img");
+          img.src = photo;
+          img.alt = `Fotografia de ${person.name || "ator"}`;
+          img.loading = "lazy";
+          img.width = 92;
+          img.height = 92;
+          li.append(img);
+        } else {
+          li.append(el("span", "cast-avatar", (person.name || "?").charAt(0)));
+        }
+        const copy = el("span", "cast-copy");
+        copy.append(el("strong", "", person.name || "Nome indisponível"));
+        if (person.character) copy.append(el("span", "muted small", person.character));
+        li.append(copy);
         list.append(li);
       }
       castBody.append(list);
@@ -256,17 +292,74 @@ return {
 export function watchView(data, type, back) {
   const root = el("article", "watch-page");
   root.append(backButton(detailsHref(type, data.id), back));
-  root.append(el("h1", "", titleOf(data, type)));
+  const heading = el("div", "watch-heading");
+  heading.append(el("span", "eyebrow", type === "tv" ? "Série" : "Filme"));
+  heading.append(el("h1", "", titleOf(data, type)));
+  root.append(heading);
 
-const url = playbackUrl(type, data.id);
+  const initialSeason = type === "tv" && Array.isArray(data.seasons)
+    ? data.seasons.find(season => season.season_number > 0)?.season_number : null;
+  let selection = { season: initialSeason, episode: 1 };
+  let frame;
+  let frameBox;
+  const controls = el("div", "episode-controls");
+  const episodeList = el("div", "episode-list");
+  const playerStatus = message("A preparar o leitor…");
+  const view = { loadSeason: () => {}, changeSeason: () => {} };
+
+  function renderEpisodes(episodes) {
+    clear(episodeList);
+    if (!episodes?.length) {
+      episodeList.append(message("Episódios indisponíveis para esta temporada."));
+      return;
+    }
+    for (const episode of episodes) {
+      const item = button(`${episode.episode_number}. ${episode.name || "Episódio"}`, () => {
+        selection.episode = episode.episode_number;
+        episodeList.querySelectorAll(".is-active").forEach(node => node.classList.remove("is-active"));
+        item.classList.add("is-active");
+        if (frame) frame.src = playbackUrl(type, data.id, selection);
+        playerStatus.textContent = `A reproduzir episódio ${selection.episode} da temporada ${selection.season}.`;
+      }, "episode-chip");
+      item.setAttribute("aria-label", `Reproduzir episódio ${episode.episode_number}: ${episode.name || "sem título"}`);
+      if (episode.episode_number === selection.episode) item.classList.add("is-active");
+      episodeList.append(item);
+    }
+  }
+
+  if (type === "tv") {
+    const label = el("label", "select-label", "Temporada");
+    const select = document.createElement("select");
+    select.className = "season-select";
+    select.setAttribute("aria-label", "Escolher temporada");
+    for (const season of (data.seasons || []).filter(item => item.season_number > 0)) {
+      const option = document.createElement("option");
+      option.value = season.season_number;
+      option.textContent = `Temporada ${season.season_number}`;
+      option.selected = season.season_number === selection.season;
+      select.append(option);
+    }
+    select.addEventListener("change", () => {
+      selection = { season: Number(select.value), episode: 1 };
+      playerStatus.textContent = "A carregar episódios…";
+      if (frame) frame.src = playbackUrl(type, data.id, selection);
+      view.changeSeason(selection.season);
+    });
+    label.prepend(icon("chevronDown"));
+    controls.append(label, select);
+    root.append(controls, episodeList);
+  }
+
+  const url = playbackUrl(type, data.id, selection);
   if (url) {
-    const frameBox = el("div", "frame-box");
-    const frame = document.createElement("iframe");
+    frameBox = el("div", "frame-box");
+    frame = document.createElement("iframe");
     frame.src = url;
     frame.title = `Leitor externo de ${titleOf(data, type)}`;
     frame.loading = "lazy";
     frame.referrerPolicy = "strict-origin-when-cross-origin";
     frame.allow = "autoplay; fullscreen; picture-in-picture";
+    frame.setAttribute("sandbox", "allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-presentation");
     frame.allowFullscreen = true;
     frame.addEventListener("error", () => {
       frameBox.replaceChildren(message(
@@ -277,12 +370,11 @@ const url = playbackUrl(type, data.id);
     frameBox.append(frame);
     root.append(frameBox);
 
-root.append(message(
-      "O leitor é externo. A incorporação pode ser bloqueada ou o conteúdo pode estar indisponível; " +
-      "não é possível confirmar a reprodução a partir do CineHub."
-    ));
+    playerStatus.textContent = "Escolhe um episódio para começar a reprodução.";
+    root.append(playerStatus);
 
 const external = el("a", "button secondary", "Abrir no serviço externo");
+    external.prepend(icon("external"));
     external.href = url;
     external.target = "_blank";
     external.rel = "noopener noreferrer";
@@ -290,6 +382,8 @@ const external = el("a", "button secondary", "Abrir no serviço externo");
   } else {
     root.append(message("Endereço de reprodução indisponível.", "error"));
   }
+
+  if (type === "tv") view.loadSeason = renderEpisodes;
 
 if (data.overview?.trim()) {
     root.append(el("h2", "", "Sinopse"));
@@ -299,5 +393,5 @@ if (data.overview?.trim()) {
     "p", "muted",
     "A reprodução requer ligação, disponibilidade do fornecedor e direitos de distribuição aplicáveis."
   ));
-  return root;
+  return view;
 }

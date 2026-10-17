@@ -1,6 +1,6 @@
 import { validId } from "./api.js";
 
-export function playbackUrl(type, id) {
+export function playbackUrl(type, id, selection = {}) {
   if (type !== "movie" && type !== "tv") return null;
 
   let tmdbId;
@@ -11,5 +11,11 @@ export function playbackUrl(type, id) {
   }
 
   const segment = type === "movie" ? "filme" : "serie";
-  return `https://myembed.biz/${segment}/${tmdbId}`;
+  const url = new URL(`https://myembed.biz/${segment}/${tmdbId}`);
+  if (type === "tv" && Number.isInteger(selection.season) && selection.season > 0 &&
+      Number.isInteger(selection.episode) && selection.episode > 0) {
+    url.searchParams.set("season", String(selection.season));
+    url.searchParams.set("episode", String(selection.episode));
+  }
+  return url.href;
 }
