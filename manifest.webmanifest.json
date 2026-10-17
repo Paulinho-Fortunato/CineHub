@@ -1,0 +1,25 @@
+{
+  "name": "CineHub — Filmes e Séries",
+  "short_name": "CineHub",
+  "description": "Catálogo independente de filmes e séries.",
+  "lang": "pt",
+  "start_url": "./#/",
+  "scope": "./",
+  "display": "standalone",
+  "theme_color": "#121212",
+  "background_color": "#121212",
+  "icons": [
+    {
+      "src": "./assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
