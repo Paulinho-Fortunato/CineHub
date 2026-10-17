@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0b0f">
+  <meta name="description" content="CineHub: catálogo independente de filmes e séries.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="CineHub">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="./assets/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="./assets/icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;600;700;800&display=swap">
+  <link rel="stylesheet" href="./assets/css/styles.css">
+  <title>CineHub</title>
+</head>
+<body>
+  <a class="skip-link" href="#main">Saltar para o conteúdo</a>
+
+<header class="site-header">
+    <nav class="nav wrap" aria-label="Navegação principal">
+      <a class="brand" href="#/" aria-label="CineHub — página inicial">CineHub</a>
+      <a class="home-link" href="#/">Início</a>
+      <form id="search-form" class="search-form" role="search">
+        <label for="search-input" class="sr-only">Pesquisar filmes e séries</label>
+        <input id="search-input" type="search" placeholder="Pesquisar filmes e séries"
+               autocomplete="off" enterkeyhint="search">
+        <button type="submit" aria-label="Pesquisar">Pesquisar</button>
+      </form>
+    </nav>
+  </header>
+
+<main id="main" class="wrap" tabindex="-1">
+    <h1>CineHub</h1>
+    <p class="status" role="status">A iniciar aplicação…</p>
+  </main>
+
+<footer class="footer wrap" aria-label="Créditos">
+    <div class="credits">
+      <a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer"
+         aria-label="The Movie Database">
+        <img src="https://files.readme.io/29c6fee-blue_short.svg"
+             width="78" height="57" alt="TMDB">
+      </a>
+      <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+    </div>
+    <p>CineHub é um projeto independente. Os dados e imagens do catálogo são fornecidos pelo TMDB.
+       A reprodução, quando disponibilizada, depende de um serviço externo e dos respetivos direitos.</p>
+  </footer>
+
+<script type="module" src="./assets/js/app.js"></script>
+</body>
+</html>
