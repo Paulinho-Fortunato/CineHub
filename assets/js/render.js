@@ -107,12 +107,17 @@ export function section(title, type) {
   const headingRow = el("div", "section-heading");
   headingRow.append(el("h2", "", title));
   const controls = el("div", "carousel-controls");
-  const previous = button("Anterior", () => {
+  const previous = button(null, () => {
     track.scrollBy({ left: -track.clientWidth * 0.85, behavior: "smooth" });
   }, "button secondary");
-  const next = button("Seguinte", () => {
+  previous.append(icon("arrowLeft"), el("span", "sr-only", "Anterior"));
+  previous.setAttribute("aria-label", "Anterior");
+  const next = button(null, () => {
     track.scrollBy({ left: track.clientWidth * 0.85, behavior: "smooth" });
   }, "button secondary");
+  next.append(icon("arrowLeft"), el("span", "sr-only", "Seguinte"));
+  next.querySelector("svg").style.transform = "rotate(180deg)";
+  next.setAttribute("aria-label", "Seguinte");
   controls.append(previous, next);
   headingRow.append(controls);
 
@@ -393,5 +398,9 @@ if (data.overview?.trim()) {
     "p", "muted",
     "A reprodução requer ligação, disponibilidade do fornecedor e direitos de distribuição aplicáveis."
   ));
-  return view;
+  // A view é simultaneamente um nó DOM e uma API de controlo, evitando que
+  // consumidores antigos tentem inserir o objeto de estado como texto.
+  Object.assign(root, view);
+  root.node = root;
+  return root;
 }
